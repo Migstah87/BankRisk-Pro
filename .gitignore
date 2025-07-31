@@ -1,0 +1,15 @@
+﻿# BankRisk Pro - Git Ignore
+# Environment files (NEVER COMMIT API KEYS!)
+.env
+*.env
+__pycache__/
+*.py[cod]
+outputs/
+reports/
+dashboards/
+models/
+logs/
+*.log
+bankrisk_cache*
+.DS_Store
+Thumbs.db
