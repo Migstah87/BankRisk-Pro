@@ -444,9 +444,9 @@ class StressTester:
         for scenario_name, result in results.items():
             print(f"\n🧪 {scenario_name.upper()}:")
             print(f"   Baseline Expected Loss: ${result.baseline_expected_loss:,.0f}")
-            print(f"   Stressed Expected Loss: ${result.stressed_expected_loss:,.0f}")
-            print(f"   Loss Increase: ${result.loss_increase:,.0f} ({result.loss_increase_pct:.1f}%)")
-            print(f"   Capital Impact: ${result.capital_impact:,.0f}")
+            print(f"   Stressed Expected Loss: ${results.stressed_expected_loss:,.0f}")
+            print(f"   Loss Increase: {results.loss_increase_pct:.1f}%")
+            print(f"   Capital Impact: ${results.capital_impact:,.0f}")
             
             if result.worst_affected_segments:
                 print(f"   Worst Affected Segment: {result.worst_affected_segments[0]['segment_name']} "

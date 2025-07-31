@@ -206,9 +206,9 @@ class BankRiskPro:
                 results = self.stress_tester.run_stress_scenario(self.current_portfolio, scenario)
                 stress_results[scenario] = results
                 
-                print(f"   Stressed Expected Loss: ${results['stressed_expected_loss']:,.0f}")
-                print(f"   Loss Increase: {results['loss_increase_pct']:.1f}%")
-                print(f"   Capital Impact: ${results['capital_impact']:,.0f}")
+                print(f"   Stressed Expected Loss: ${results.stressed_expected_loss:,.0f}")
+                print(f"   Loss Increase: {results.loss_increase_pct:.1f}%")
+                print(f"   Capital Impact: ${results.capital_impact:,.0f}")
             
             self.stress_results = stress_results
             print(f"\n✅ Stress testing completed for {len(scenarios)} scenarios")
