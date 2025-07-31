@@ -37,7 +37,7 @@ A comprehensive credit risk management platform designed for banking institution
 ### **Option 1: Automated Setup (Recommended)**
 ```bash
 # 1. Clone repository
-git clone https://github.com/yourusername/BankRisk-Pro.git
+git clone https://github.com/Migstah87/BankRisk-Pro.git
 cd BankRisk-Pro
 
 # 2. Run setup script
