@@ -86,6 +86,14 @@ Get your free FRED API key: https://fred.stlouisfed.org/docs/api/api_key.html
 **With API keys**: Enhanced accuracy with real economic data
 
 ## 📈 **Sample Output**
+<img width="587" height="944" alt="BankRisk1_Menu" src="https://github.com/user-attachments/assets/069f6cef-231b-4827-be15-5107a9f86536" />
+<img width="453" height="960" alt="BankRisk4_PortfolioStats" src="https://github.com/user-attachments/assets/5f7a97f2-f945-4c9a-803f-05275ec35fdd" />
+<img width="1699" height="1200" alt="newplot" src="https://github.com/user-attachments/assets/607c3f3e-d1c2-4931-9c82-ffde6ceea75e" />
+<img width="671" height="803" alt="image" src="https://github.com/user-attachments/assets/77afabd6-3453-4fd1-a531-3ffb6d0ed592" />
+<img width="678" height="796" alt="image" src="https://github.com/user-attachments/assets/dc9a2080-1864-44c4-a354-3ebca698a4b0" />
+
+
+
 
 ### **Portfolio Analysis**
 ```
