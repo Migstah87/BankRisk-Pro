@@ -1,24 +1,26 @@
-# 🏦 BankRisk Pro - Advanced Credit Risk Management Platform
+# 🏦 BankRisk Pro - Credit Risk Analytics Demonstration Platform
 
 [![Python 3.8+](https://img.shields.io/badge/python-3.8+-blue.svg)](https://www.python.org/downloads/)
 [![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg)](https://opensource.org/licenses/MIT)
 [![Code Style: Black](https://img.shields.io/badge/code%20style-black-000000.svg)](https://github.com/psf/black)
 
-A comprehensive credit risk management platform designed for banking institutions, featuring machine learning models, regulatory stress testing, and interactive risk dashboards with intelligent API rate limiting.
+BankRisk Pro is an AI-assisted educational and portfolio project demonstrating an end-to-end credit-risk analytics workflow using Python, machine learning, synthetic borrower data, economic-data integration, Monte Carlo risk measurement, stress-testing concepts, and interactive visualization.
+
+The project is designed to demonstrate applied data-science, risk-analytics, and software-development concepts. It is not a production banking system, validated risk model, regulatory reporting platform, or substitute for an institution's governed model-risk and regulatory processes.
 
 ## 🎯 **Key Features**
 
-### **🤖 Advanced Risk Analytics**
+### **🤖 Credit Risk Analytics**
 - **ML Credit Scoring**: Random Forest, Gradient Boosting, Logistic Regression
 - **Portfolio Analytics**: VaR calculation, concentration risk, diversification metrics
-- **Stress Testing**: CCAR/DFAST scenarios, custom economic shocks
+- **Stress Testing**: CCAR/DFAST-style stress scenarios and custom economic shocks for educational scenario simulations inspired by regulatory stress-testing concepts; not regulatory-compliant CCAR/DFAST implementations
 - **Real-time Data**: FRED API integration with intelligent caching
 
-### **🏛️ Regulatory Compliance**
-- **Basel III**: Capital adequacy, risk-weighted assets
-- **Stress Testing**: Regulatory scenarios, loss projections
-- **Reporting**: Executive dashboards, compliance reports
-- **Capital Planning**: Economic capital, regulatory capital
+### **🏛️ Regulatory Risk Concepts**
+- **Basel III-related Concepts**: Capital adequacy and risk-weighted assets
+- **Stress-Scenario Analysis**: Scenario analysis and loss projections
+- **Risk Reporting**: Executive dashboards and risk reporting
+- **Capital Planning Concepts**: Economic capital and regulatory capital concepts
 
 ### **📊 Professional Dashboards**
 - Interactive risk visualizations
@@ -68,7 +70,9 @@ The platform includes intelligent API management to handle rate limits:
 ### **Economic Data Sources**
 - **FRED API**: Federal Reserve economic data (free key recommended)
 - **Yahoo Finance**: Market data with smart rate limiting
-- **Fallback Data**: Realistic synthetic data when APIs unavailable
+- **Fallback Data**: Realistic synthetic data when external APIs are unavailable
+
+External economic data is used when configured and successfully retrieved. When it is unavailable, the project may use realistic synthetic or fallback data. The borrower portfolio and default outcomes are synthetic.
 
 ### **Rate Limiting Features**
 ```python
@@ -82,8 +86,8 @@ The platform includes intelligent API management to handle rate limits:
 ### **API Keys (Optional but Recommended)**
 Get your free FRED API key: https://fred.stlouisfed.org/docs/api/api_key.html
 
-**Without API keys**: Platform uses realistic fallback data  
-**With API keys**: Enhanced accuracy with real economic data
+**Without API keys**: Project uses realistic fallback data  
+**With API keys**: Uses real economic data when successfully retrieved
 
 ## 📈 **Sample Output**
 <img width="587" height="944" alt="BankRisk1_Menu" src="https://github.com/user-attachments/assets/069f6cef-231b-4827-be15-5107a9f86536" />
@@ -133,13 +137,22 @@ Economic APIs → Data Caching → Portfolio Generation → ML Models → Risk A
   Yahoo Finance  Rate Limits   10K+ Borrowers    Risk Grading    Stress Test   Plotly
 ```
 
+## 📐 **Modeling Scope & Limitations**
+
+- Borrower and loan records are synthetically generated.
+- Default outcomes used for ML training are synthetically generated from borrower and economic risk characteristics.
+- Reported AUC and model-performance results measure performance against the simulated target and should not be interpreted as evidence of real-world default-prediction performance.
+- Monte Carlo VaR uses simplified portfolio assumptions, including borrower-level PDs and fixed LGD assumptions, and demonstrates methodology rather than replicating an enterprise credit portfolio model.
+- Stress-testing scenarios demonstrate scenario-analysis concepts and are not validated regulatory stress tests.
+
 ## 📋 **Use Cases**
 
-- **Credit Risk Officers**: Portfolio risk assessment and monitoring
-- **Regulators**: Stress testing and capital adequacy analysis  
-- **Risk Managers**: Concentration risk and diversification analysis
-- **Executives**: High-level risk reporting and strategic planning
-- **Analysts**: Model development and validation
+- **Credit-Risk Analytics Learning**: Explore end-to-end credit-risk workflows
+- **Portfolio Analytics Demonstrations**: Examine exposure, concentration, expected loss, and VaR concepts
+- **ML Model-Development Practice**: Experiment with classification models, features, and evaluation
+- **Stress-Testing Methodology Demonstrations**: Explore scenario analysis and loss projections
+- **Executive Visualization and Risk Storytelling**: Practice communicating analytics through dashboards and reports
+- **Software-Engineering and API-Integration Practice**: Work with modular Python components, external data sources, caching, and fallback strategies
 
 ## 🛠️ **Technical Stack**
 
@@ -211,7 +224,7 @@ python setup_bankrisk.py
 
 ## 📊 **Performance Optimization**
 
-The platform includes several optimizations for production use:
+The project includes several engineering patterns that demonstrate production-oriented development concepts:
 
 - **Data Caching**: Economic data cached for 15-30 minutes
 - **Batch Processing**: Single API calls for multiple data points
@@ -235,31 +248,34 @@ This project is licensed under the MIT License - see [LICENSE](LICENSE) file.
 
 This platform demonstrates:
 - **Advanced Python Programming**: Object-oriented design, error handling
-- **Financial Risk Modeling**: Credit risk, portfolio theory, regulatory compliance
+- **Financial Risk Modeling**: Credit risk, portfolio theory, regulatory risk concepts
 - **Machine Learning**: Model development, validation, feature engineering
 - **API Integration**: Rate limiting, caching, fallback strategies
 - **Data Visualization**: Interactive dashboards, executive reporting
 - **Software Engineering**: Modular design, testing, documentation
 
-## 👨‍💼 **Professional Applications**
+## 👨‍💼 **Skills Demonstrated**
 
-**For Banking Professionals:**
-- Portfolio risk monitoring and reporting
-- Regulatory stress testing and compliance
-- Credit policy development and validation
-- Capital planning and optimization
+**Risk Analytics:**
+- Portfolio risk measurement
+- Expected-loss analysis
+- Concentration analysis
+- Stress/scenario analysis
+- Risk reporting and visualization
 
-**For Risk Managers:**
-- Concentration risk analysis
-- Early warning system development
-- Model governance and validation
-- Scenario analysis and planning
+**Data Science:**
+- Classification modeling
+- Model comparison and validation
+- Feature engineering
+- ROC-AUC evaluation
+- Synthetic-data experimentation
 
-**For Executives:**
-- Strategic risk assessment
-- Board-level reporting
-- Regulatory compliance oversight
-- Business planning and optimization
+**Software Engineering:**
+- Modular Python application design
+- API integration
+- Caching and fallback strategies
+- Error handling
+- Interactive visualization
 
 ## Methodology & Limitations
 
@@ -273,6 +289,6 @@ This platform demonstrates:
 
 ---
 
-**Built for banking professionals by a risk management specialist**
+**Independent AI-assisted project exploring the intersection of credit risk, data science, and software development.**
 
-*Showcasing expertise in quantitative finance, machine learning, and regulatory compliance*
+*Built as a learning and portfolio demonstration; not intended for production risk decisions or regulatory reporting.*
