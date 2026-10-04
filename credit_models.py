@@ -18,7 +18,9 @@ from typing import List, Dict, Tuple, Any, Optional
 from sklearn.ensemble import RandomForestClassifier, GradientBoostingClassifier
 from sklearn.linear_model import LogisticRegression
 from sklearn.preprocessing import StandardScaler, LabelEncoder
-from sklearn.model_selection import train_test_split, cross_val_score, StratifiedKFold
+from sklearn.model_selection import train_test_split, cross_val_score, cross_val_predict, StratifiedKFold
+from sklearn.base import clone
+from sklearn.pipeline import Pipeline
 from sklearn.metrics import classification_report, confusion_matrix, roc_auc_score, roc_curve
 import joblib
 import warnings
@@ -345,6 +347,12 @@ class CreditRiskModeler:
             
             print(f"      ✅ AUC: {auc_score:.3f} (CV: {cv_scores.mean():.3f} ± {cv_scores.std():.3f})")
         
+        # Keep full training set so portfolio PDs can be scored out-of-fold
+        self._train_X = X
+        self._train_y = y
+        self._train_ids = [b.borrower_id for b in borrowers]
+        self._oof_cache = {}
+        
         # Store test data for later analysis
         self.X_test = X_test
         self.y_test = y_test
@@ -355,7 +363,32 @@ class CreditRiskModeler:
         
         return results
     
-    def predict_default_probability(self, borrowers: List, model_name: str = 'random_forest') -> List:
+    def _out_of_fold_probabilities(self, model_name: str) -> np.ndarray:
+        """
+        5-fold out-of-fold default probabilities for the training portfolio.
+        
+        Every borrower is scored by a model that never saw that borrower, so the
+        portfolio PDs are not inflated by in-sample memorisation (a random forest
+        scores its own training rows near 0 or 1).
+        """
+        if model_name in self._oof_cache:
+            return self._oof_cache[model_name]
+        
+        config = self.model_configs[model_name]
+        estimator = clone(config['model'])
+        if config['requires_scaling']:
+            estimator = Pipeline([('scaler', StandardScaler()), ('model', estimator)])
+        
+        oof = cross_val_predict(
+            estimator, self._train_X, self._train_y,
+            cv=StratifiedKFold(n_splits=5, shuffle=True, random_state=42),
+            method='predict_proba'
+        )[:, 1]
+        self._oof_cache[model_name] = oof
+        return oof
+    
+    def predict_default_probability(self, borrowers: List, model_name: str = 'random_forest',
+                                    out_of_fold: bool = True) -> List:
         """
         Predict default probabilities and assign risk grades
         
@@ -375,21 +408,18 @@ class CreditRiskModeler:
         
         print(f"🎯 Predicting default probabilities using {model_name}...")
         
-        # Prepare features
-        X, _ = self.prepare_features(borrowers)
-        
-        # Get model and check if scaling is required
-        model = self.models[model_name]
-        requires_scaling = self.model_configs[model_name]['requires_scaling']
-        
-        # Apply scaling if required
-        if requires_scaling:
-            X_model = self.scalers['standard'].transform(X)
+        borrower_ids = [b.borrower_id for b in borrowers]
+        if out_of_fold and borrower_ids == getattr(self, '_train_ids', None):
+            # Same portfolio the models were trained on: use out-of-fold scores
+            print("   Using 5-fold out-of-fold predictions (no in-sample scoring)")
+            probabilities = self._out_of_fold_probabilities(model_name) * 100
         else:
-            X_model = X
-        
-        # Make predictions
-        probabilities = model.predict_proba(X_model)[:, 1] * 100  # Convert to percentages
+            # New/unseen borrowers: score with the fitted model
+            X, _ = self.prepare_features(borrowers)
+            model = self.models[model_name]
+            requires_scaling = self.model_configs[model_name]['requires_scaling']
+            X_model = self.scalers['standard'].transform(X) if requires_scaling else X
+            probabilities = model.predict_proba(X_model)[:, 1] * 100  # Convert to percentages
         
         # Update borrowers with predictions
         for i, borrower in enumerate(borrowers):

@@ -261,6 +261,16 @@ This platform demonstrates:
 - Regulatory compliance oversight
 - Business planning and optimization
 
+## Methodology & Limitations
+
+- **Synthetic data and labels.** Borrowers *and* default outcomes are simulated. Defaults are generated from a formula on the same borrower features the models train on, so reported AUC measures how well the models recover that formula, not real-world predictive power. Replace `_generate_default_target` with observed outcomes before drawing any conclusion from model metrics.
+- **Portfolio loss distribution.** VaR is a Monte Carlo quantile of portfolio credit loss under a one-factor Gaussian copula (`asset_correlation`, default 0.10, an assumption; Basel IRB retail correlations are roughly 3-16%). Setting it to 0 gives independent defaults, which understates tail losses.
+- **PD scoring.** Portfolio PDs for the training portfolio are 5-fold out-of-fold predictions, so no borrower is scored by a model that saw it.
+- **Concentration.** `concentration_hhi` is the larger of the industry and state *normalized* HHI (0 = even, 1 = single bucket).
+- **Stress tests.** Scenarios apply bounded PD multipliers (capped at 5x) to borrower risk drivers. They are scenario-based sensitivity analyses, not a CCAR/DFAST implementation. Capital impact is loss increase x 1.5, a placeholder assumption.
+- **Economic data.** Without a `FRED_API_KEY`, indicators are simulated placeholders (flagged by `EconomicIndicators.is_simulated`), not live data.
+- **Capital figures.** The executive dashboard shows economic capital required (99% VaR minus expected loss, as % of exposure). The regulatory-compliance table uses illustrative placeholder ratios and is marked "Not computed".
+
 ---
 
 **Built for banking professionals by a risk management specialist**

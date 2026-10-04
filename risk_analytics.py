@@ -15,6 +15,7 @@ import pandas as pd
 from typing import List, Dict, Tuple, Optional
 from dataclasses import dataclass
 from scipy import stats
+from scipy.stats import norm
 import warnings
 warnings.filterwarnings('ignore')
 
@@ -50,6 +51,10 @@ class PortfolioRiskAnalyzer:
         
         # Risk parameters
         self.lgd_assumption = 0.45  # Loss Given Default
+        # One-factor (Vasicek / Gaussian copula) asset correlation. Basel IRB uses
+        # roughly 3%-16% for retail exposures depending on PD; 0.10 is an assumption.
+        # Set to 0.0 to recover the old independent-default behaviour.
+        self.asset_correlation = 0.10
         self.confidence_levels = [0.95, 0.99, 0.999]
         
         print("📊 Portfolio Risk Analyzer initialized")
@@ -151,39 +156,51 @@ class PortfolioRiskAnalyzer:
         
         return credit_scores.apply(score_to_pd)
     
-    def _calculate_portfolio_var(self, df: pd.DataFrame, num_simulations: int = 10000) -> Tuple[float, float]:
+    def _calculate_portfolio_var(self, df: pd.DataFrame, num_simulations: int = 10000,
+                                 asset_correlation: Optional[float] = None,
+                                 seed: Optional[int] = 42) -> Tuple[float, float]:
         """
-        Calculate Portfolio Value at Risk using Monte Carlo simulation
+        Portfolio credit loss quantiles via one-factor Gaussian copula Monte Carlo.
+        
+        Borrower i defaults when  sqrt(rho)*Z + sqrt(1-rho)*e_i  <  Phi^-1(PD_i),
+        where Z is a systematic factor shared by the whole portfolio and e_i is
+        idiosyncratic. Marginal default probabilities stay equal to each PD, but
+        defaults cluster in bad draws of Z, which produces the fat loss tail that
+        independent Bernoulli draws miss.
         
         Args:
-            df: DataFrame with loan data
-            num_simulations: Number of Monte Carlo simulations
+            df: DataFrame with loan_amount and probability_default (percent)
+            num_simulations: Number of Monte Carlo scenarios
+            asset_correlation: rho in [0, 1); defaults to self.asset_correlation
+            seed: RNG seed for reproducible results (None for non-deterministic)
             
         Returns:
-            Tuple of (VaR_95%, VaR_99%)
+            Tuple of (VaR_95%, VaR_99%) as total portfolio loss quantiles
         """
         
-        print("   🎲 Running Monte Carlo simulation for VaR...")
+        rho = self.asset_correlation if asset_correlation is None else asset_correlation
+        if not 0.0 <= rho < 1.0:
+            raise ValueError("asset_correlation must be in [0, 1)")
         
-        # Extract key variables
-        loan_amounts = df['loan_amount'].values
-        default_probs = df['probability_default'].values / 100  # Convert to decimal
+        print(f"   🎲 Running Monte Carlo simulation for VaR (asset correlation = {rho:.2f})...")
         
-        # Monte Carlo simulation
-        portfolio_losses = []
+        rng = np.random.default_rng(seed)
+        loss_given_default = df['loan_amount'].values * self.lgd_assumption
+        pd_clipped = np.clip(df['probability_default'].values / 100, 1e-6, 1 - 1e-6)
+        default_threshold = norm.ppf(pd_clipped)
+        n_loans = len(loss_given_default)
         
-        for sim in range(num_simulations):
-            # Generate random defaults based on individual PDs
-            random_draws = np.random.random(len(loan_amounts))
-            defaults = random_draws < default_probs
-            
-            # Calculate total loss for this simulation
-            total_loss = np.sum(defaults * loan_amounts * self.lgd_assumption)
-            portfolio_losses.append(total_loss)
+        portfolio_losses = np.empty(num_simulations)
+        chunk = max(1, min(num_simulations, 2_000_000 // max(n_loans, 1)))  # bound memory
         
-        portfolio_losses = np.array(portfolio_losses)
+        for start in range(0, num_simulations, chunk):
+            m = min(chunk, num_simulations - start)
+            systematic = rng.standard_normal((m, 1))
+            idiosyncratic = rng.standard_normal((m, n_loans))
+            asset_value = np.sqrt(rho) * systematic + np.sqrt(1.0 - rho) * idiosyncratic
+            defaults = asset_value < default_threshold
+            portfolio_losses[start:start + m] = defaults @ loss_given_default
         
-        # Calculate VaR at different confidence levels
         var_95 = np.percentile(portfolio_losses, 95)
         var_99 = np.percentile(portfolio_losses, 99)
         
@@ -223,16 +240,27 @@ class PortfolioRiskAnalyzer:
     
     def _calculate_concentration_hhi(self, df: pd.DataFrame) -> float:
         """
-        Calculate Herfindahl-Hirschman Index for overall concentration
+        Concentration index: the larger of the industry and state *normalized* HHI.
+        
+        HHI = sum(share_i^2) over exposure shares. It is normalized to
+        (HHI - 1/N) / (1 - 1/N) so 0 = perfectly even across N buckets and
+        1 = everything in one bucket, which keeps the thresholds meaningful
+        regardless of how many industries/states exist.
+        
+        The previous version squared individual loan shares, which is ~1/N_loans
+        (about 0.0001 for 10,000 loans) for any granular portfolio and therefore
+        said nothing about concentration.
         """
         
-        total_exposure = df['loan_amount'].sum()
+        def normalized_hhi(column: str) -> float:
+            exposure = df.groupby(column)['loan_amount'].sum()
+            shares = exposure / exposure.sum()
+            n = len(shares)
+            if n <= 1:
+                return 1.0
+            return float(((shares ** 2).sum() - 1.0 / n) / (1.0 - 1.0 / n))
         
-        # Individual loan concentration (should be low for good diversification)
-        loan_weights = df['loan_amount'] / total_exposure
-        hhi = (loan_weights ** 2).sum()
-        
-        return hhi
+        return max(normalized_hhi('industry'), normalized_hhi('state'))
     
     def _calculate_grade_distribution(self, df: pd.DataFrame) -> Dict[str, float]:
         """Calculate distribution of risk grades"""
@@ -535,7 +563,7 @@ class PortfolioRiskAnalyzer:
         
         # Concentration Analysis
         report += "🎯 CONCENTRATION ANALYSIS:\n"
-        report += f"   Overall HHI: {portfolio_metrics.concentration_hhi:.4f}\n"
+        report += f"   Concentration (normalized HHI, max of industry/state): {portfolio_metrics.concentration_hhi:.4f}\n"
         report += f"   Diversification Ratio: {portfolio_metrics.diversification_ratio:.3f}\n"
         
         # Concentration interpretation

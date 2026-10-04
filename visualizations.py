@@ -272,28 +272,22 @@ class RiskDashboard:
                 row=4, col=2
             )
         
-        # 12. Capital Adequacy Indicator
-        if metrics:
-            capital_ratio = 12.5  # Example capital ratio
+        # 12. Economic capital requirement (computed from the simulated loss distribution)
+        # Unexpected loss at the 99% level as a share of exposure: what capital would
+        # need to cover beyond expected loss. A bank-level regulatory capital ratio
+        # cannot be derived from a loan portfolio alone, so none is shown here.
+        if metrics and metrics.total_exposure > 0:
+            capital_required_pct = (metrics.portfolio_var_99 - metrics.expected_loss) / metrics.total_exposure * 100
             fig.add_trace(
                 go.Indicator(
                     mode="gauge+number",
-                    value=capital_ratio,
+                    value=capital_required_pct,
+                    number={'suffix': '%', 'valueformat': '.2f'},
                     domain={'x': [0, 1], 'y': [0, 1]},
-                    title={'text': "Capital Ratio (%)"},
+                    title={'text': "Economic Capital Required<br>(99% VaR - EL, % of exposure)"},
                     gauge={
-                        'axis': {'range': [None, 20]},
-                        'bar': {'color': "darkgreen" if capital_ratio > 10.5 else "orange" if capital_ratio > 8 else "red"},
-                        'steps': [
-                            {'range': [0, 8], 'color': "lightgray"},
-                            {'range': [8, 10.5], 'color': "yellow"},
-                            {'range': [10.5, 20], 'color': "lightgreen"}
-                        ],
-                        'threshold': {
-                            'line': {'color': "red", 'width': 4},
-                            'thickness': 0.75,
-                            'value': 8
-                        }
+                        'axis': {'range': [0, max(10, capital_required_pct * 1.5)]},
+                        'bar': {'color': "steelblue"}
                     }
                 ),
                 row=4, col=3
@@ -932,12 +926,12 @@ class RiskDashboard:
         
         # 4. Regulatory Compliance Table
         compliance_data = [
-            ['Metric', 'Current', 'Required', 'Status'],
-            ['CET1 Ratio', '11.5%', '4.5%', '✅ Compliant'],
-            ['Tier 1 Ratio', '13.2%', '6.0%', '✅ Compliant'],
-            ['Total Capital Ratio', '15.8%', '8.0%', '✅ Compliant'],
-            ['Leverage Ratio', '5.2%', '3.0%', '✅ Compliant'],
-            ['LCR', '125%', '100%', '✅ Compliant']
+            ['Metric (ILLUSTRATIVE INPUTS)', 'Placeholder', 'Minimum', 'Status'],
+            ['CET1 Ratio', '11.5%', '4.5%', 'Not computed'],
+            ['Tier 1 Ratio', '13.2%', '6.0%', 'Not computed'],
+            ['Total Capital Ratio', '15.8%', '8.0%', 'Not computed'],
+            ['Leverage Ratio', '5.2%', '3.0%', 'Not computed'],
+            ['LCR', '125%', '100%', 'Not computed']
         ]
         
         fig.add_trace(

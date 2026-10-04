@@ -35,6 +35,7 @@ class EconomicIndicators:
     consumer_confidence: Optional[float] = None
     housing_price_index: Optional[float] = None
     ten_year_treasury: Optional[float] = None
+    is_simulated: bool = False  # True when values come from the offline fallback generator
 
 class EconomicDataCollector:
     """
@@ -142,7 +143,7 @@ class EconomicDataCollector:
         # Generate dates for last 24 months
         end_date = datetime.now()
         start_date = end_date - timedelta(days=730)
-        dates = pd.date_range(start=start_date, end=end_date, freq='M')
+        dates = pd.date_range(start=start_date, end=end_date, freq='MS')  # 'M' removed in pandas 3
         
         # Realistic economic data ranges by series
         fallback_ranges = {
@@ -304,8 +305,11 @@ class EconomicDataCollector:
             vix_volatility=market_data.get('vix_volatility', 20.0),
             consumer_confidence=consumer_confidence,
             housing_price_index=housing_price_index,
-            ten_year_treasury=market_data.get('ten_year_treasury', 4.5)
+            ten_year_treasury=market_data.get('ten_year_treasury', 4.5),
+            is_simulated=not bool(self.fred_api_key)
         )
+        if snapshot.is_simulated:
+            print("⚠️  No FRED API key: economic indicators are SIMULATED placeholders, not live data")
         
         # Cache the snapshot
         self.economic_cache[cache_key] = (current_time, snapshot)
